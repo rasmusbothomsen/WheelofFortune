@@ -1,6 +1,7 @@
 package com.example.wheeloffortune
 
 import android.os.Bundle
+import android.view.Surface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.WheelOfFortuneTheme
 import com.example.wheeloffortune.view.GamePageScreen
 import com.example.wheeloffortune.viewmodel.GamePageViewModel
+import com.example.wheeloffortune.viewmodel.WheelViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,7 +25,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.primary
                 ) {
-                    GamePageScreen(GamePageViewModel())
+                    GamePageScreen(GamePageViewModel(WheelViewModel()))
 
                 }
             }
