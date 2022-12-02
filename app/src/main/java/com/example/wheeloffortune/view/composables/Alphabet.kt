@@ -38,7 +38,7 @@ fun LetterClick(char:Char, onClick: (Char) -> Unit, clicked:Boolean){
             .wrapContentWidth()
             .wrapContentHeight()
             .firstBaselineToTop(45.dp),
-            textAlign = TextAlign.Center, style = MaterialTheme.typography.displayLarge)
+            textAlign = TextAlign.Center, style = MaterialTheme.typography.displayMedium)
     }
 }
 @Composable

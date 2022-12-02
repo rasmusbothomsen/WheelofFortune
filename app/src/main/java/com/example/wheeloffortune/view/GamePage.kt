@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.FabPosition
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -18,13 +20,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import androidx.navigation.NavController
 import com.example.compose.WheelOfFortuneTheme
+import com.example.wheeloffortune.Screen
 import com.example.wheeloffortune.data.PlayerData
 import com.example.wheeloffortune.view.composables.AlphabetGrid
 import com.example.wheeloffortune.view.composables.BottomBar
@@ -34,103 +39,106 @@ import com.example.wheeloffortune.viewmodel.GamePageViewModel
 import com.example.wheeloffortune.viewmodel.WheelViewModel
 
 
+
 @Composable
-fun GamePageScreen(viewmodel: GamePageViewModel) {
+fun GamePageScreen(viewmodel: GamePageViewModel, navController: NavController) {
     var wheelPopUpControl by remember { mutableStateOf(false) }
     var alphabetPopUpControl by remember { mutableStateOf(false) }
     var guessPopUpController by remember { mutableStateOf(false) }
+    var guessText by remember {
+        mutableStateOf("")
+    }
 
-    var wheelViewModel = viewmodel.wheelViewModel
-    var canSpinWheel by remember { mutableStateOf(wheelViewModel.wheelData.value!!.canSpin)}
-    var guessText by remember { mutableStateOf("Your Guess") }
-    var playerPoints by remember { mutableStateOf(viewmodel.playerData.points)}
-
-    Log.d("canSpin local var", canSpinWheel.toString())
     androidx.compose.material.Scaffold(
-        topBar = { Topbar("points: " + playerPoints) },
-        content = {
-            Log.d("canSpin local var", canSpinWheel.toString())
+        topBar = {
+        Topbar(points = "Points "+viewmodel.points)
+    },
+    content = {
 
-            if (wheelPopUpControl) {
-                WheelPopup ({
-                    wheelPopUpControl = false
-                    canSpinWheel = false
-                },wheelViewModel
-                )
-            }
+        if (wheelPopUpControl){
+            WheelPopup(onDismiss = { wheelPopUpControl = false},
+                wheelViewModel = viewmodel.wheelViewModel, viewmodel )
+        }
+        if (alphabetPopUpControl) {
+            AlphabetPopUp(
+                onDismiss = {
+                    alphabetPopUpControl = false
 
-            if (alphabetPopUpControl) {
-                AlphabetPopUp(
-                    onDismiss = {
+                },
+                letters = viewmodel.getAlphabetList(),
+                onClick = {
+                    if (!viewmodel.wheelViewModel.canSpin) {
+                        viewmodel.evaluateGuessedLetter(it)
                         alphabetPopUpControl = false
-                        canSpinWheel = true
+                    }
+                },
+                viewmodel
+            )
+        }
+        if(viewmodel.wonGame){
+            navController.navigate(Screen.EndScreen.route)
+        }
 
-                    },
-                    letters = viewmodel.getAlphabetList(),
-                    onClick = {
-                        if (!canSpinWheel) {
-                            viewmodel.evaluateGuessedLetter(it)
-                            alphabetPopUpControl = false
-                        }
-                    },
-                    viewmodel
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        )
+        {
+            Box(modifier = Modifier.height(400.dp)) {
+                LetterGrid(letters = viewmodel.getLettersToShow(),viewmodel.category!!)
             }
             if (guessPopUpController) {
                 GuessPopUp(
                     onDismiss = { guessPopUpController = false },
                     onChange = {guessText = it},
-                    guessText
+                    guessText,
+                    onClick = {viewmodel.evaluatetotalGuess(guessText)}
                 )
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            )
-            {
-                Box(modifier = Modifier.height(400.dp)) {
-                    LetterGrid(letters = viewmodel.getLettersToShow())
-                }
-            }
-        },
+        }
+    },
         floatingActionButton = {
             Row(
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 AlphabetButton ({
-                    if(!wheelViewModel.wheelData.value!!.canSpin){
+                    if(!viewmodel.wheelViewModel.canSpin){
                         alphabetPopUpControl = true
                     }
                 },
-                canSpinWheel)
+                    viewmodel.wheelViewModel.canSpin)
                 SpinButton({
-                    wheelPopUpControl = true
-                }, canSpinWheel)
+                    if (viewmodel.wheelViewModel.canSpin){
+                        wheelPopUpControl = true
+                    }
+                }, !viewmodel.wheelViewModel.canSpin)
                 GuessPopUpButton {
                     guessPopUpController = true
                 }
             }
+
         },
         floatingActionButtonPosition = FabPosition.Center,
         isFloatingActionButtonDocked = true,
-        bottomBar = { BottomBar(viewmodel.getLifes().toString()) })
-
+        bottomBar = {
+            BottomBar(lives = ""+viewmodel.lives)
+        }
+    )
 }
 
 
 @Composable
-fun WheelPopup(onDismiss: () -> Unit,wheelViewModel: WheelViewModel) {
+fun WheelPopup(onDismiss: () -> Unit,wheelViewModel: WheelViewModel, viewmodel: GamePageViewModel) {
     Popup(
         alignment = Alignment.Center,
         onDismissRequest = onDismiss
     ) {
         LuckWheel(
-            textList = wheelViewModel.wheelData.value?.possibleResults!!, resultDegree = wheelViewModel.calculateResult()
-        ) {
-        }
+            textList = wheelViewModel.possibleResults, resultDegree = wheelViewModel.calculateResult(viewmodel)
+        )
 
     }
 }
@@ -146,7 +154,7 @@ fun AlphabetPopUp(
         alignment = Alignment.BottomCenter,
         onDismissRequest = onDismiss
     ) {
-        Box(modifier = Modifier.height(300.dp)) {
+        Box(modifier = Modifier.height(350.dp)) {
             AlphabetGrid(
                 letters = letters, onClick = { onClick.invoke(it) },
                 viewmodel
@@ -157,7 +165,7 @@ fun AlphabetPopUp(
 }
 
 @Composable
-fun LetterGrid(letters: List<Char>) {
+fun LetterGrid(letters: List<Char>, category:String) {
     Box(Modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
         Card(
             modifier = Modifier
@@ -180,7 +188,7 @@ fun LetterGrid(letters: List<Char>) {
                 item(span = {
                     GridItemSpan(maxLineSpan)
                 }) {
-                    CategoryCard("test")
+                    CategoryCard(category)
                 }
 
             }
@@ -269,17 +277,23 @@ fun GuessPopUpButton(onClick: () -> Unit) {
 }
 
 @Composable
-fun GuessPopUp(onDismiss: () -> Unit, onChange: (String) -> Unit, textValue: String) {
-    Popup(
-        alignment = Alignment.Center,
-        onDismissRequest = onDismiss
-    ) {
-        androidx.compose.material.OutlinedTextField(
-            value = textValue,
-            singleLine = true,
-            colors = androidx.compose.material.TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
-            onValueChange = { onChange.invoke(it) })
-    }
+fun GuessPopUp(onDismiss: () -> Unit, onChange: (String) -> Unit, textValue: String, onClick: () -> Unit) {
+
+        Row() {
+            androidx.compose.material.TextField(
+                value = textValue,
+                singleLine = true,
+                colors = androidx.compose.material.TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
+                onValueChange = onChange,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {onClick.invoke()}))
+        androidx.compose.material.Button(onClick = onClick) {
+            Text(text = "Guess This Word")
+
+        }
+        }
+
 }
 
 
@@ -314,7 +328,6 @@ fun Modifier.firstBaselineToTop(
 @Composable
 fun GamePagePreview() {
     WheelOfFortuneTheme {
-        GamePageScreen(GamePageViewModel(WheelViewModel( PlayerData(100,5))))
     }
 }
 

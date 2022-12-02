@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.primary
                 ) {
-                    GamePageScreen(GamePageViewModel(WheelViewModel( PlayerData(100,5)), PlayerData(100,5)))
+                    NavController()
 
                 }
             }

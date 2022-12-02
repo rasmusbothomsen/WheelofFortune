@@ -1,30 +1,42 @@
 package com.example.wheeloffortune.viewmodel
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import android.util.Log
+import androidx.compose.runtime.*
+import androidx.compose.ui.text.toUpperCase
+import com.example.wheeloffortune.data.Category
 import com.example.wheeloffortune.data.PlayerData
 import com.example.wheeloffortune.data.WheelData
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlin.math.log
 
-class GamePageViewModel(wheelViewModel: WheelViewModel) {
+class GamePageViewModel(wheelViewModel: WheelViewModel, category:List<Category>) {
+    val category:String?
     val wordToGuess:String
     var shownLetters = mutableListOf<Char>()
     var guessedLetters = mutableListOf<Char>()
-    private val _playerData: MutableState<PlayerData?>
-    val playerData: State<PlayerData?>
     private val alphabet = mutableListOf<Char>()
+
+    private val _playerData:PlayerData
     var wheelViewModel = wheelViewModel
+    var lives by mutableStateOf(5)
+    var points by mutableStateOf(100)
+
+    var wonGame by mutableStateOf(false)
+
+
 
     init {
-        wordToGuess = "KARTOFFLER"
-        /** TODO **/
+        var randomCat = category[(0..category.size-1).random()]
+        var randomWord = (0..randomCat.words?.size!!-1).random()
+        this.category = randomCat.name
+        wordToGuess = randomCat.words!!.get(randomWord)
         var a = 'A'
         while (a <= 'Z'){
             alphabet.add(a)
             ++a
         }
-        _playerData = mutableStateOf(PlayerData(100,5))
-        playerData = _playerData
+        _playerData = PlayerData(100,5)
         setShownLetterLength()
     }
     private fun setShownLetterLength(){
@@ -43,6 +55,7 @@ class GamePageViewModel(wheelViewModel: WheelViewModel) {
         if (guessedLetters.contains(guessedLetter)){
             return
         }
+        wheelViewModel.canSpin = true
         wordToGuess.toCharArray().forEachIndexed{index, letter ->
             if (letter == guessedLetter){
                 shownLetters[index]=guessedLetter
@@ -67,25 +80,30 @@ class GamePageViewModel(wheelViewModel: WheelViewModel) {
         return false
     }
 
-    private fun loseLife(){
-        playerData.value?.lives?.dec()
-        if (playerData.value?.lives!! <=0){
-            /** TODO END GAME **/
+     fun loseLife(){
+         lives = lives-1
+        if (lives <=0){
+            wonGame
         }
+         Log.d("Playerlives in vm",""+ lives)
     }
     private fun addPoints(){
-        /*
-        var tempPoints = wheelViewModel.wheelData.lastResult?.toInt()
+
+        var tempPoints = wheelViewModel.lastResult.toInt()
         if (tempPoints != null){
-            playerData.points += wheelViewModel.wheelData.lastResult?.toInt()!!
+            points+=tempPoints
+        }
+    }
+
+    fun evaluatetotalGuess(guess:String){
+        var cleanGuess = guess.uppercase().removeWhitespaces().replace("\n","")
+        if (cleanGuess.equals(wordToGuess.uppercase())){
+            wonGame = true
+        }else{
+            loseLife()
         }
 
-         */
     }
-
-    fun getPoints():Int?{
-        return playerData.value?.points
-    }
-
+    fun String.removeWhitespaces() = replace(" ", "")
 
 }

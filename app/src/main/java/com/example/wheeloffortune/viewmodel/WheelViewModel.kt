@@ -1,41 +1,41 @@
 package com.example.wheeloffortune.viewmodel
 
 import android.content.res.Resources
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
+import android.util.Log
+import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringArrayResource
 import com.example.wheeloffortune.R
 import com.example.wheeloffortune.data.PlayerData
 import com.example.wheeloffortune.data.WheelData
 
 class WheelViewModel(playerData: PlayerData) {
-    var playerData = playerData
-    private val _wheelData: MutableState<WheelData?>
-    val wheelData: State<WheelData?>
+    var lastResult by mutableStateOf("")
+    var canSpin by mutableStateOf(true)
+    var possibleResults: List<String>
 
     init {
-        var tempAr = mutableListOf<String>("Bankrupt","Extra Turn","100","100","100","200","200","500")
-        _wheelData = mutableStateOf(WheelData(tempAr,null,true))
-        wheelData = _wheelData
+        var tempAr = listOf<String>("Bankrupt","Extra Turn","100","100","100","200","200","500")
+        possibleResults = tempAr
     }
 
-    fun calculateResult():Float{
+    fun calculateResult(viewModel: GamePageViewModel):Float{
         var randomNumber = (1..8).random()
-        wheelData.value?.canSpin = false
-        executeResult(randomNumber)
-        return ((360/randomNumber)-10).toFloat()
+        canSpin = false
+        executeResult(randomNumber, viewModel)
+        Log.d("number: "+randomNumber, "Effect"+ possibleResults[randomNumber-1])
+        var indexToEnd = (360/(possibleResults.size+1))*randomNumber
+        return (indexToEnd-10).toFloat()
     }
 
-    private fun executeResult(result:Int){
+    private fun executeResult(result:Int, viewModel: GamePageViewModel){
         when(result){
-            1 -> playerData.points = 0
-            2 -> wheelData.value?.canSpin = true
-
+            1 -> viewModel.points = 0
+            2 -> canSpin = true
             else -> {
-                wheelData.value?.lastResult = wheelData.value?.possibleResults?.get(result-1)
+                lastResult = possibleResults[result-1]
             }
         }
+
     }
 
 
