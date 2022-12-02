@@ -16,10 +16,13 @@ import kotlinx.coroutines.launch
 import kotlin.math.sign
 
 
-
+/*
+The spinning wheel comp is taken from a lib.
+changed it abit
+ */
 @Composable
  fun LuckWheel(textList:List<String>, resultDegree:Float){
-    val state = rememberSpinWheelState(resultDegree = resultDegree)
+    val state = rememberSpinWheelState(resultDegree = resultDegree, autoSpinDelay = 2)
     Log.d("Postiion",""+resultDegree)
     val scope = rememberCoroutineScope()
     SpinWheel(
