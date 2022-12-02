@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.example.compose.WheelOfFortuneTheme
+import com.example.wheeloffortune.data.PlayerData
 import com.example.wheeloffortune.view.composables.AlphabetGrid
 import com.example.wheeloffortune.view.composables.BottomBar
 import com.example.wheeloffortune.view.composables.LuckWheel
@@ -38,31 +39,48 @@ fun GamePageScreen(viewmodel: GamePageViewModel) {
     var wheelPopUpControl by remember { mutableStateOf(false) }
     var alphabetPopUpControl by remember { mutableStateOf(false) }
     var guessPopUpController by remember { mutableStateOf(false) }
-    var guessText by remember { mutableStateOf("Your Guess")}
 
+    var wheelViewModel = viewmodel.wheelViewModel
+    var canSpinWheel by remember { mutableStateOf(wheelViewModel.wheelData.value!!.canSpin)}
+    var guessText by remember { mutableStateOf("Your Guess") }
+    var playerPoints by remember { mutableStateOf(viewmodel.playerData.points)}
 
+    Log.d("canSpin local var", canSpinWheel.toString())
     androidx.compose.material.Scaffold(
-        topBar = { Topbar("points: "+viewmodel.getPoints()) },
+        topBar = { Topbar("points: " + playerPoints) },
         content = {
+            Log.d("canSpin local var", canSpinWheel.toString())
+
             if (wheelPopUpControl) {
-                WheelPopup {
+                WheelPopup ({
                     wheelPopUpControl = false
-                }
+                    canSpinWheel = false
+                },wheelViewModel
+                )
             }
+
             if (alphabetPopUpControl) {
                 AlphabetPopUp(
-                    onDismiss = { alphabetPopUpControl = false },
+                    onDismiss = {
+                        alphabetPopUpControl = false
+                        canSpinWheel = true
+
+                    },
                     letters = viewmodel.getAlphabetList(),
                     onClick = {
-                        viewmodel.evaluateGuessedLetter(it)
-                        alphabetPopUpControl = false},
-                    viewmodel)
+                        if (!canSpinWheel) {
+                            viewmodel.evaluateGuessedLetter(it)
+                            alphabetPopUpControl = false
+                        }
+                    },
+                    viewmodel
+                )
             }
             if (guessPopUpController) {
                 GuessPopUp(
                     onDismiss = { guessPopUpController = false },
-                    onChange = {},
-                    ""
+                    onChange = {guessText = it},
+                    guessText
                 )
             }
             Column(
@@ -82,12 +100,15 @@ fun GamePageScreen(viewmodel: GamePageViewModel) {
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                AlphabetButton {
-                    alphabetPopUpControl = true
-                }
-                SpinButton {
+                AlphabetButton ({
+                    if(!wheelViewModel.wheelData.value!!.canSpin){
+                        alphabetPopUpControl = true
+                    }
+                },
+                canSpinWheel)
+                SpinButton({
                     wheelPopUpControl = true
-                }
+                }, canSpinWheel)
                 GuessPopUpButton {
                     guessPopUpController = true
                 }
@@ -101,22 +122,13 @@ fun GamePageScreen(viewmodel: GamePageViewModel) {
 
 
 @Composable
-fun WheelPopup(onDismiss: () -> Unit) {
+fun WheelPopup(onDismiss: () -> Unit,wheelViewModel: WheelViewModel) {
     Popup(
         alignment = Alignment.Center,
         onDismissRequest = onDismiss
     ) {
         LuckWheel(
-            textList = listOf(
-                "Pie 1",
-                "Pie 2",
-                "Pie 3",
-                "Pie 4",
-                "Pie 5",
-                "Pie 6",
-                "Pie 7",
-                "Pie 8"
-            ), resultDegree = 200f
+            textList = wheelViewModel.wheelData.value?.possibleResults!!, resultDegree = wheelViewModel.calculateResult()
         ) {
         }
 
@@ -124,14 +136,21 @@ fun WheelPopup(onDismiss: () -> Unit) {
 }
 
 @Composable
-fun AlphabetPopUp(onDismiss: () -> Unit, letters: List<Char>, onClick: (Char) -> Unit, viewmodel: GamePageViewModel) {
+fun AlphabetPopUp(
+    onDismiss: () -> Unit,
+    letters: List<Char>,
+    onClick: (Char) -> Unit,
+    viewmodel: GamePageViewModel
+) {
     Popup(
         alignment = Alignment.BottomCenter,
         onDismissRequest = onDismiss
     ) {
         Box(modifier = Modifier.height(300.dp)) {
-            AlphabetGrid(letters = letters, onClick = {onClick.invoke(it)},
-            viewmodel)
+            AlphabetGrid(
+                letters = letters, onClick = { onClick.invoke(it) },
+                viewmodel
+            )
         }
     }
 
@@ -214,20 +233,26 @@ fun LetterBox(char: Char) {
 }
 
 @Composable
-fun SpinButton(onClick: () -> Unit) {
+fun SpinButton(onClick: () -> Unit, disable: Boolean) {
     FloatingActionButton(
         onClick = onClick, modifier = Modifier.size(70.dp),
         elevation = FloatingActionButtonDefaults.elevation(10.dp),
+        containerColor = if (disable) {
+            Color.Gray
+        } else {
+            MaterialTheme.colorScheme.primary
+        }
     ) {
         Icon(Icons.Filled.PlayArrow, "Local description")
     }
 }
 
 @Composable
-fun AlphabetButton(onClick: () -> Unit) {
+fun AlphabetButton(onClick: () -> Unit, disable: Boolean) {
     FloatingActionButton(
         onClick = onClick, modifier = Modifier.size(60.dp),
         elevation = FloatingActionButtonDefaults.elevation(10.dp),
+        containerColor = if(disable){Color.Gray} else {MaterialTheme.colorScheme.primaryContainer}
     ) {
         Icon(Icons.Filled.Edit, "Local description")
     }
@@ -289,7 +314,7 @@ fun Modifier.firstBaselineToTop(
 @Composable
 fun GamePagePreview() {
     WheelOfFortuneTheme {
-        GamePageScreen(GamePageViewModel(WheelViewModel()))
+        GamePageScreen(GamePageViewModel(WheelViewModel( PlayerData(100,5))))
     }
 }
 

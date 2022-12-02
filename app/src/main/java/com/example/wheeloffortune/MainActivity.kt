@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.WheelOfFortuneTheme
+import com.example.wheeloffortune.data.PlayerData
 import com.example.wheeloffortune.view.GamePageScreen
 import com.example.wheeloffortune.viewmodel.GamePageViewModel
 import com.example.wheeloffortune.viewmodel.WheelViewModel
@@ -25,7 +26,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.primary
                 ) {
-                    GamePageScreen(GamePageViewModel(WheelViewModel()))
+                    GamePageScreen(GamePageViewModel(WheelViewModel( PlayerData(100,5)), PlayerData(100,5)))
 
                 }
             }
@@ -37,6 +38,6 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    WheelOfFortuneTheme() {
+    WheelOfFortuneTheme {
     }
 }

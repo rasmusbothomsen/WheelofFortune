@@ -1,3 +1,14 @@
 <resources>
-    <string name="app_name">Wheel of fortune</string>
+    <string name="app_name" translatable="false">Wheel of fortune</string>
+
+    <string-array name="WheelResults">
+        <item>Bankrupt</item>
+        <item>Extra Turn</item>
+        <item>100</item>
+        <item>100</item>
+        <item>100</item>
+        <item>200</item>
+        <item>200</item>
+        <item>500</item>
+    </string-array>
 </resources>

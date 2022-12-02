@@ -1,24 +1,31 @@
 package com.example.wheeloffortune.viewmodel
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import com.example.wheeloffortune.data.PlayerData
+import com.example.wheeloffortune.data.WheelData
 
 class GamePageViewModel(wheelViewModel: WheelViewModel) {
     val wordToGuess:String
     var shownLetters = mutableListOf<Char>()
     var guessedLetters = mutableListOf<Char>()
-    val playerData:PlayerData
+    private val _playerData: MutableState<PlayerData?>
+    val playerData: State<PlayerData?>
     private val alphabet = mutableListOf<Char>()
+    var wheelViewModel = wheelViewModel
 
     init {
-        wordToGuess = "ThIs is a Test"
+        wordToGuess = "KARTOFFLER"
         /** TODO **/
         var a = 'A'
         while (a <= 'Z'){
             alphabet.add(a)
             ++a
         }
+        _playerData = mutableStateOf(PlayerData(100,5))
+        playerData = _playerData
         setShownLetterLength()
-        playerData = PlayerData(100,5)
     }
     private fun setShownLetterLength(){
         for(x in 0 until wordToGuess.length){
@@ -61,19 +68,23 @@ class GamePageViewModel(wheelViewModel: WheelViewModel) {
     }
 
     private fun loseLife(){
-        playerData.lives -=1
-        if (playerData.lives<=0){
+        playerData.value?.lives?.dec()
+        if (playerData.value?.lives!! <=0){
             /** TODO END GAME **/
         }
     }
     private fun addPoints(){
+        /*
+        var tempPoints = wheelViewModel.wheelData.lastResult?.toInt()
+        if (tempPoints != null){
+            playerData.points += wheelViewModel.wheelData.lastResult?.toInt()!!
+        }
+
+         */
     }
 
-    fun getPoints():Int{
-        return playerData.points
-    }
-    fun getLifes():Int{
-        return playerData.lives
+    fun getPoints():Int?{
+        return playerData.value?.points
     }
 
 
