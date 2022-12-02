@@ -66,6 +66,10 @@ class GamePageViewModel(wheelViewModel: WheelViewModel, category:List<Category>)
 
         if (correctGuess){
 
+            if(String(shownLetters.toCharArray()).equals(wordToGuess)){
+                wonGame=true
+            }
+
         }else{
             loseLife()
         }

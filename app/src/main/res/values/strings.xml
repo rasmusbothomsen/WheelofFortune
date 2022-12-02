@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Wheel of fortune</string>
+    <string name="app_name" translatable="false">211708 Lykkehjulet</string>
 
     <string-array name="WheelResults">
         <item>Bankrupt</item>

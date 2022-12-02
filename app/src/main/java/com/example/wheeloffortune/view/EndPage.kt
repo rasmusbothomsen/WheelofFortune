@@ -13,12 +13,12 @@ import com.example.wheeloffortune.view.composables.BottomBar
 import com.example.wheeloffortune.view.composables.Topbar
 
 @Composable
-fun EndPage(navController: NavController){
+fun EndPage(navController: NavController, lives:Int){
     
     Scaffold(topBar = {Topbar(points = "")},
     content = {
         Column() {
-            Text(text = "Game Over", style = androidx.compose.material3.MaterialTheme.typography.displayLarge)
+            Text(text = if (lives>0){"You Won!"}else{"Game Over"}, style = androidx.compose.material3.MaterialTheme.typography.displayLarge)
             Button(onClick = { navController.navigate(Screen.GameScreen.route)}) {
                 Text(text = "New game")
             }
